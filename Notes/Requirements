@@ -1,0 +1,17 @@
+Requirements:
+Web application
+  Backend
+    ERN
+    API?
+  Frontend
+    UI components
+  hosting 
+    Local
+    Heroku
+Convert excel to jena-fuseki
+  Specify mapping
+  Excel sheet as CSV
+    Load into application
+  Convert to RDF
+    URIs
+    Download from application
