@@ -1,6 +1,6 @@
 const SparqlClient = require('sparql-http-client');
 
-// set up spaql client
+// set up sparql client
 const endpointUrl = 'http://127.0.0.1:3030/firesat/sparql';
 const client = new SparqlClient({ endpointUrl });
 
@@ -17,31 +17,78 @@ function printResults( stream ){
       })
 }
 
-// query to get all classes
-//
-// TODO: return results instead of print
+// query to get all classes, their labels, and
+// the count of objects in that class
 async function getAllClasses(){
     query = `
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-    SELECT DISTINCT ?type
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX owl: <http://www.w3.org/2002/07/owl#>
+    
+    SELECT DISTINCT ?type ?label (COUNT(?obj) AS ?count)
     WHERE{
-        ?s a ?type .
+        ?type a owl:Class .
+        ?obj a ?type .
+        OPTIONAL{
+            ?type rdfs:label ?label
+        }
+        FILTER( isIRI(?type) )
     }
+    GROUP BY ?type ?label
     `;
 
     const stream = await client.query.select(query);
 
-    printResults(stream);
+    const results = new Promise((resolve, reject) => {
+        let res = {}
+
+        stream.on('data', row => {
+            className = row['type'].value;
+            count = row['count'].value;
+
+            if( !(className in res) ){
+                res[className] = {};
+                res[className]['count'] = count;
+            }
+            else{
+                res[className]['count'] += count;
+            }
+
+            if('label' in row){
+                if ( !('label' in res[className]) ){
+                    res[className]['label'] = [];
+                }
+
+                res[className]['label'].push(row['label'].value);               
+            }
+        });        
+
+        stream.on('end', function (){
+            resolve(res);
+        });
+
+        stream.on('error', err => {
+            reject(err);
+        });
+
+    });
+
+    res = await results;
+
+    return res;
 }
 
 // returns a list of properties given a class name
 // properties are strings
-async function getProperties( class_name ){
+//
+// TODO: Make this an object? Split properties based on
+// what type of values they have? (literal vs not?)
+async function getProperties( className ){
     query = `
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     SELECT DISTINCT ?prop
     WHERE{
-        ?item a <${class_name}> .
+        ?item a <${className}> .
         ?item ?prop ?any .
         FILTER( ?prop not in (rdf:type))
     }
@@ -56,11 +103,12 @@ async function getProperties( class_name ){
     // TODO: add error handling
     const results = new Promise((resolve, reject) => {
         let res = [];
+
         stream.on('data', row => {
             Object.entries(row).forEach(([key, value]) => {
                 res.push(value.value);
             })
-        })
+        });
 
         stream.on('end', function (){
             resolve(res);
@@ -86,15 +134,8 @@ function makePropertiesString( properties ){
     return str;
 }
 
-// gets value of all given properties for all objects
+// gets values of all given properties for all objects
 // of given class name
-//
-// TODO: see if there is someway to get results in
-// JSON format or something more useful than
-// ID PROP VAL with many rows per ID
-//
-// TODO: return well formatted results instead of just
-// printing
 async function getItems( className, properties ){
     propertiesStr = makePropertiesString(properties);
     query =`
@@ -105,20 +146,55 @@ async function getItems( className, properties ){
         ?id ?prop ?val
         FILTER( ?prop in (${propertiesStr}))
     }
+
+    LIMIT 50
     `;
 
     const stream = await client.query.select(query);
 
-    printResults(stream);
+    const results = new Promise((resolve, reject) =>{
+        let res = {};
+
+        stream.on('data', row => {
+            id = row["id"].value
+            prop = row["prop"].value
+            val = row["val"].value
+            
+            if(!(id in res)){
+                res[id] = {}
+            }
+            
+            if(!(prop in res[id])){
+                res[id][prop] = [] 
+            }
+    
+            res[id][prop].push(val);
+        })
+
+        stream.on('end', function (){
+            resolve(res);
+        });
+
+        stream.on('error', err => {
+            reject(err);
+        });
+        
+    
+    });
+
+    res = await results;
+    return res;
 }
 
 // basic testing main function
 async function main(){
-    getAllClasses();
-    className = "http://opencaesar.io/examples/firesat/disciplines/fse/fse#Assembly";
+    classes = await getAllClasses();
+    console.log(classes);
+    className = Object.keys(classes)[0]
     properties = await getProperties( className );
-    //console.log(properties);
-    getItems(className, properties)
+    console.log(properties);
+    items = await getItems(className, properties)
+    console.log(items)
 }
 
 main();
