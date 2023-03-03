@@ -1,4 +1,4 @@
-const SparqlClient = require('sparql-http-client');
+const SparqlClient = require('sparql-http-client/ParsingClient')
 
 // set up sparql client
 const endpointUrl = 'http://127.0.0.1:3030/firesat/sparql';
@@ -17,111 +17,112 @@ function printResults( stream ){
       })
 }
 
-// query to get all classes, their labels, and
-// the count of objects in that class
+
+function makeClassOrPropertyList( res ){
+    var list = [];
+
+    for(const row of res){
+        let URI = row['URI'].value;
+        let count = Number(row['count'].value);
+        let label = null;
+        if('label' in row){
+          label = row['label'].value;               
+        }
+
+        // check if this class has already been added (in case of multiple labels)
+        // i gets -1 if not found
+        const i = list.findIndex(e => e['URI'] == URI);
+
+        if( i == -1 ){
+            let obj = {};
+            obj['URI'] = URI;
+            obj['count'] = count;
+            obj['labels'] = [];
+            if(label != null){
+                obj['labels'].push(label);
+            }
+            
+            list.push(obj);
+        }
+        else {
+            list[i]['count'] += count;
+            if(label != null){
+                list[i]['labels'].push(label);
+            }
+        }
+    }
+
+    return list;
+}
+
+
 async function getAllClasses(){
-    query = `
+    // query to get all classes, their labels, and
+    // the count of objects in that class
+    var query = `
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX owl: <http://www.w3.org/2002/07/owl#>
     
-    SELECT DISTINCT ?type ?label (COUNT(?obj) AS ?count)
+    SELECT DISTINCT (?class AS ?URI) ?label (COUNT(?obj) AS ?count)
     WHERE{
-        ?type a owl:Class .
-        ?obj a ?type .
+        ?class a owl:Class .
+        ?obj a ?class .
         OPTIONAL{
-            ?type rdfs:label ?label
+            ?class rdfs:label ?label
         }
-        FILTER( isIRI(?type) )
+        FILTER( isIRI(?class) )
     }
-    GROUP BY ?type ?label
+    GROUP BY ?class ?label
     `;
 
-    const stream = await client.query.select(query);
+    // setup return object
+    var owlClasses = [];
 
-    const results = new Promise((resolve, reject) => {
-        let res = {}
+    // execute query
+    try{
+        const res = await client.query.select(query);
+        //console.log(res)
+        owlClasses = makeClassOrPropertyList(res);
+    }
+    catch(error){
+        console.log("ERROR: ", error)
+    }
 
-        stream.on('data', row => {
-            className = row['type'].value;
-            count = row['count'].value;
-
-            if( !(className in res) ){
-                res[className] = {};
-                res[className]['count'] = count;
-            }
-            else{
-                res[className]['count'] += count;
-            }
-
-            if('label' in row){
-                if ( !('label' in res[className]) ){
-                    res[className]['label'] = [];
-                }
-
-                res[className]['label'].push(row['label'].value);               
-            }
-        });        
-
-        stream.on('end', function (){
-            resolve(res);
-        });
-
-        stream.on('error', err => {
-            reject(err);
-        });
-
-    });
-
-    res = await results;
-
-    return res;
+    return owlClasses;
 }
 
 // returns a list of properties given a class name
 // properties are strings
-//
-// TODO: Make this an object? Split properties based on
-// what type of values they have? (literal vs not?)
-async function getProperties( className ){
-    query = `
+async function getProperties( classURI ){
+    var query = `
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-    SELECT DISTINCT ?prop
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+    SELECT DISTINCT (?prop AS ?URI) ?label (COUNT(?item) AS ?count)
     WHERE{
-        ?item a <${className}> .
+        ?item a <${classURI}> .
         ?item ?prop ?any .
+        OPTIONAL{
+            ?prop rdfs:label ?label
+        }
         FILTER( ?prop not in (rdf:type))
     }
+    GROUP BY ?prop ?label
     `;
 
-    const stream = await client.query.select(query);
+    var properties = [];
 
-    // to get results we need to let the stream listener
-    // handle all of the data from the query
-    // Promise resolves at end of results, rejects on error
-    //
-    // TODO: add error handling
-    const results = new Promise((resolve, reject) => {
-        let res = [];
+    try{
+        const res = await client.query.select(query);
+        // console.log(res)
+        properties = makeClassOrPropertyList(res);
+    }
+    catch(error){
+        console.log("ERROR: ", error)
+    }
 
-        stream.on('data', row => {
-            Object.entries(row).forEach(([key, value]) => {
-                res.push(value.value);
-            })
-        });
-
-        stream.on('end', function (){
-            resolve(res);
-        });
-
-        stream.on('error', err => {
-            reject(err);
-        });
-    });
- 
-    // wait for promise to resolve before returning
-    res = await results;
-    return res;
+    return properties;
 
 }
 
@@ -136,64 +137,59 @@ function makePropertiesString( properties ){
 
 // gets values of all given properties for all objects
 // of given class name
-async function getItems( className, properties ){
-    propertiesStr = makePropertiesString(properties);
-    query =`
+async function getItems( classURI, propertiesList ){
+    var propertiesStr = makePropertiesString(propertiesList);
+    var query =`
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
     SELECT *
     WHERE{
-        ?id a <${className}> .
+        ?id a <${classURI}> .
         ?id ?prop ?val
         FILTER( ?prop in (${propertiesStr}))
     }
-
-    LIMIT 50
     `;
 
-    const stream = await client.query.select(query);
+    var items = [];
 
-    const results = new Promise((resolve, reject) =>{
-        let res = {};
+    try{
+        const res = await client.query.select(query);
+        for(const row of res){
+            let id = row['id'].value;
+            let prop = row['prop'].value;
+            let val = row['val'].value;
 
-        stream.on('data', row => {
-            id = row["id"].value
-            prop = row["prop"].value
-            val = row["val"].value
-            
-            if(!(id in res)){
-                res[id] = {}
+            const i = items.findIndex(e => e['id'] == id);
+
+            if(i == -1){
+                let item = {};
+                item['id'] = id;
+                item[prop] = val;
+
+                items.push(item)
             }
-            
-            if(!(prop in res[id])){
-                res[id][prop] = [] 
+            else{
+                items[i][prop] = val;
             }
+        }
+    }
+    catch(error){
+        console.log("ERROR: ", error)
+    }
     
-            res[id][prop].push(val);
-        })
-
-        stream.on('end', function (){
-            resolve(res);
-        });
-
-        stream.on('error', err => {
-            reject(err);
-        });
-        
-    
-    });
-
-    res = await results;
-    return res;
+    return items;
 }
 
 // basic testing main function
 async function main(){
     classes = await getAllClasses();
-    console.log(classes);
-    className = Object.keys(classes)[0]
-    properties = await getProperties( className );
-    console.log(properties);
-    items = await getItems(className, properties)
+    //console.log(classes);   
+    classURI = classes[1]['URI'];
+    //console.log(classURI);
+    properties = await getProperties( classURI );
+    //console.log(properties);
+    propList = [properties[0]['URI'], properties[1]['URI']]
+    items = await getItems(classURI, propList);
     console.log(items)
 }
 
