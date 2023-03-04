@@ -46,4 +46,14 @@ function makePropertiesString( properties ){
     return str;
 }
 
-module.exports = { makeClassOrPropertyList, makePropertiesString };
+const assert = function(condition, message) {
+    if (!condition)
+        throw Error('Assert failed: ' + (message || ''));
+};
+
+function isValidURL(string) {
+  var res = string.match(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
+  return (res !== null)
+};
+
+module.exports = { makeClassOrPropertyList, makePropertiesString};

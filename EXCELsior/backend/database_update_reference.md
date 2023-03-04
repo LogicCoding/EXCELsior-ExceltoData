@@ -1,4 +1,6 @@
 ### Matan's Todo
+- make succesful automated JS query 
+- consider how to handle number literals and what needs to be manually escaped
 - mark things in GitHub tasks
 
 ### Matan's Open questions
@@ -20,7 +22,7 @@
         }
         GROUP BY ?prop ?label
     ```
-- 
+- **what should we do about blank nodes** https://www.w3.org/TR/rdf11-concepts/#dfn-blank-node 
 
 
 ## Learning Fuseki `UPDATE`
