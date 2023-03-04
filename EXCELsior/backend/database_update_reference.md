@@ -138,10 +138,10 @@ WHERE
 
 
       DELETE { graph ?g {<http://bipm.org/jcgm/vim4> <http://purl.org/dc/elements/1.1/rights> ?rights} }
-      INSERT { graph ?g {<http://bipm.org/jcgm/vim4> <http://purl.org/dc/elements/1.1/rights> "all rights reserved to GnarlyMshtep"} }
+      INSERT { graph ?g {<http://bipm.org/jcgm/vim4> <http://purl.org/dc/elements/1.1/rights> "all rights reserved to GnarlyMshtep!"} }
       WHERE{ 
         graph ?g {
-          #?instance rdf:type <http://www.w3.org/2002/07/owl#Ontology> . 
+          ?instance rdf:type <http://www.w3.org/2002/07/owl#Ontology> . 
           <http://bipm.org/jcgm/vim4> <http://purl.org/dc/elements/1.1/rights> ?rights
         }
       }
@@ -150,7 +150,25 @@ WHERE
 
 
 ### Given `class`, `attribute` where some instances of class have attribute `attribute` update the values of `attribute` to a given list
+- one option is to repeat the single item attribute update above. 
+- yah, I'll just programatically generate it
+- check that multiple updates work
+  ```
+  PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+  PREFIX owl: <http://www.w3.org/2002/07/owl#>
 
-
-
+  DELETE { graph ?g {?instance <http://purl.org/dc/elements/1.1/rights> ?oldValue} } 
+  INSERT { graph ?g { ?instance <http://purl.org/dc/elements/1.1/rights> ?newValue } }
+  WHERE { graph ?g {
+        values (?oldValue ?newValue) { 
+        ('Copyright 1995-2019 DCMI.' 'Copyright 1995-2019 DCMI. (or something like that)')
+        ('all rights reserved to GnarlyMshtep!' 'all rights reserved to GnarlyMshtep! (cuz\' he\'s cool and stuff)')
+        }
+      ?instance rdf:type <http://www.w3.org/2002/07/owl#Ontology> . 
+      ?subject <http://purl.org/dc/elements/1.1/rights> ?oldValue
+    }
+  }
+  ```
+- the above is a better way to do it then I had in mind and is due to (this post)[https://stackoverflow.com/questions/10078966/multiple-sparql-insert-where-queries-in-a-single-request]
+- generating this programatically...
 
