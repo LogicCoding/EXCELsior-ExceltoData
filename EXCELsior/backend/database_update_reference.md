@@ -174,3 +174,31 @@ WHERE
 - the above is a better way to do it then I had in mind and is due to (this post)[https://stackoverflow.com/questions/10078966/multiple-sparql-insert-where-queries-in-a-single-request]
 - generating this programatically...
 
+### Working with datatype
+thsi query can return some datatypes
+```
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?sub ?pred ?t WHERE {
+  ?sub ?pred ?obj .
+  BIND(DATATYPE(?obj) AS ?t) 
+#  ?t rdf:type xsd:double .
+} LIMIT 1000
+```
+this query can append datatypes to literals
+```
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+DELETE { GRAPH ?g { ?instanceName rdfs:label ?oldAttribValue . } } 
+INSERT { GRAPH ?g { ?instanceName rdfs:label ?literal . } }
+WHERE { GRAPH ?g {
+    values (?instanceName ?newAttribValue) {
+      (<http://imce.jpl.nasa.gov/foundation/mission#TraversingElement> "Presenting Element")
+      (<http://imce.jpl.nasa.gov/foundation/mission#SpecifiedElement>  "Specified Element")
+    }
+    ?instanceName rdfs:label ?oldAttribValue .
+    BIND(DATATYPE(?oldAttribValue) AS ?dt)
+    BIND(STRDT(?newAttribValue, ?dt) AS ?literal)
+}}
+```

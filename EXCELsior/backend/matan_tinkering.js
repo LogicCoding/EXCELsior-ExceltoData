@@ -14,13 +14,13 @@ async function main(){
     //! notice it was necessery to escape '
     const req = {
         body : {
-            class: '<http://www.w3.org/2002/07/owl#Ontology>', 
-            attribute: '<http://purl.org/dc/elements/1.1/rights>',
+            class: '<http://www.w3.org/2002/07/owl#NamedIndividual>', 
+            attribute: '<http://bipm.org/jcgm/vim4#hasDoubleNumber>',
             instances : [
-                '<http://bipm.org/jcgm/vim4>',  '<http://purl.org/dc/elements/1.1>'
+                '<http://opencaesar.io/examples/firesat/programs/earth-science/projects/firesat/workpackages/06/06/subsystems/eps/masses#BatteryPack1MassLimitConstraint>'
             ],
             newAttrib : [
-                'all rights reserved to GnarlyMshtep! (JS\')', 'Copyright 1995-2019 DCMI (JS\')'
+                '6.9696969'
             ] 
         }
     }
@@ -68,3 +68,17 @@ async function main(){
 } 
 
 main();
+
+/**tested with: 
+ * 
+ * PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT DISTINCT ?sub ?pred ?obj ?t WHERE {
+  <http://opencaesar.io/examples/firesat/programs/earth-science/projects/firesat/workpackages/06/06/subsystems/eps/masses#BatteryPack1MassLimitConstraint> <http://bipm.org/jcgm/vim4#hasDoubleNumber> ?obj .
+  BIND(DATATYPE(?obj) AS ?t) 
+#  ?t rdf:type xsd:double .
+} LIMIT 1000
+
+
+ */
