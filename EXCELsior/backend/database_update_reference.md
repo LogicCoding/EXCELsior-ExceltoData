@@ -2,6 +2,7 @@
 - make succesful automated JS query 
 - consider how to handle number literals and what needs to be manually escaped
 - mark things in GitHub tasks
+- **proper error throwing for other routes + error routes**
 
 ### Matan's Open questions
 - which graph do we update to? do we want to let the user choose? update all? 

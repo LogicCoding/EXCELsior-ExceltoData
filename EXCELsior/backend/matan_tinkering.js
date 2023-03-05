@@ -68,17 +68,3 @@ async function main(){
 } 
 
 main();
-
-/**tested with: 
- * 
- * PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-SELECT DISTINCT ?sub ?pred ?obj ?t WHERE {
-  <http://opencaesar.io/examples/firesat/programs/earth-science/projects/firesat/workpackages/06/06/subsystems/eps/masses#BatteryPack1MassLimitConstraint> <http://bipm.org/jcgm/vim4#hasDoubleNumber> ?obj .
-  BIND(DATATYPE(?obj) AS ?t) 
-#  ?t rdf:type xsd:double .
-} LIMIT 1000
-
-
- */
