@@ -127,14 +127,9 @@ async function updateDB(client, propertyWeUpdated, instanceURIs, propertyValues)
         `// removed: ?instanceName rdf:type ${req.body.class} .
         
         
-    try {//this try catch may be unnecerssery since express catches results 
-        const res = await client.query.update(query_insert);// returned undefined... hard to know if operation went through
-        console.log(res);
-    } catch (error) {
-        console.error(error);
-        throw new Error(error)
-    }
-    return {res: "the update went through succesfully."}
+    const res = await client.query.update(query_insert);// returned undefined... hard to know if operation went through
+    
+    return {res : res, label: "the update went through succesfully (res should be undefined)."}
 }
 
 

@@ -71,10 +71,9 @@ app.get('/csv', async (req, res, next) => {
     }
 });
 
-// Error Handling
-app.use(errorHandler);
 
-// Start Server
+
+
 //CSV is currently parsed on the frontend. 
 //This allows us to let the user know if there are any issues before they send to DB 
 app.post('/update', async (req, res) => { 
@@ -101,12 +100,16 @@ app.post('/update', async (req, res) => {
 
         res.json(updateRes);        
     } catch (error) {
-        throw new Error(error)         
+        next(error)         
     }
 
     // can use res.download for actual CSV
 });
 
+// Error Handling
+app.use(errorHandler);
+
+// Start Server
 app.listen(port, () => {
   console.log(`EXCELsior listening on port ${port}`)
 });
