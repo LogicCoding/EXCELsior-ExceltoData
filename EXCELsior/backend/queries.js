@@ -24,14 +24,9 @@ async function getClasses( client ){
     var owlClasses = [];
 
     // execute query
-    try{
-        const res = await client.query.select(query);
-        //console.log(res)
-        owlClasses = makeClassOrPropertyList(res);
-    }
-    catch(error){
-        console.log("ERROR: ", error)
-    }
+    const res = await client.query.select(query);
+    owlClasses = makeClassOrPropertyList(res);
+
 
     return owlClasses;
 }
@@ -57,17 +52,10 @@ async function getProperties( client, classURI ){
 
     var properties = [];
 
-    try{
-        const res = await client.query.select(query);
-        // console.log(res)
-        properties = makeClassOrPropertyList(res);
-    }
-    catch(error){
-        console.log("ERROR: ", error)
-    }
+    const res = await client.query.select(query);
+    properties = makeClassOrPropertyList(res);
 
     return properties;
-
 }
 
 // gets values of all given properties for all objects
@@ -87,29 +75,24 @@ async function getItems( client, classURI, propertiesList ){
 
     var items = [];
 
-    try{
-        const res = await client.query.select(query);
-        for(const row of res){
-            let id = row['id'].value;
-            let prop = row['prop'].value;
-            let val = row['val'].value;
+    const res = await client.query.select(query);
+    for(const row of res){
+        let id = row['id'].value;
+        let prop = row['prop'].value;
+        let val = row['val'].value;
 
-            const i = items.findIndex(e => e['id'] == id);
+        const i = items.findIndex(e => e['id'] == id);
 
-            if(i == -1){
-                let item = {};
-                item['id'] = id;
-                item[prop] = val;
+        if(i == -1){
+            let item = {};
+            item['id'] = id;
+            item[prop] = val;
 
-                items.push(item)
-            }
-            else{
-                items[i][prop] = val;
-            }
+            items.push(item)
         }
-    }
-    catch(error){
-        console.log("ERROR: ", error)
+        else{
+            items[i][prop] = val;
+        }
     }
     
     return items;

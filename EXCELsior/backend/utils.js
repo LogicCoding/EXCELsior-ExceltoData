@@ -46,4 +46,24 @@ function makePropertiesString( properties ){
     return str;
 }
 
-module.exports = { makeClassOrPropertyList, makePropertiesString };
+function makeErrorMessage( req, params ){
+    let errMsg = null;
+
+    for(const param of params){
+        if(!(Object.hasOwn(req.body, param))){
+
+            if(errMsg == null){
+                errMsg = "Request is missing params: "
+            }
+            else{
+                errMsg += ', ';
+            }
+
+            errMsg += param;
+        }
+    }
+
+    return errMsg;
+}
+
+module.exports = { makeClassOrPropertyList, makePropertiesString, makeErrorMessage };
