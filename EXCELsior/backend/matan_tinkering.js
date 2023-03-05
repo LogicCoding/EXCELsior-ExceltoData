@@ -20,47 +20,39 @@ async function main(){
                 '<http://bipm.org/jcgm/vim4>',  '<http://purl.org/dc/elements/1.1>'
             ],
             newAttrib : [
-                'Copyright 1995-2019 DCMI (JS\')',  'all rights reserved to GnarlyMshtep! (JS\')'
+                'all rights reserved to GnarlyMshtep! (JS\')', 'Copyright 1995-2019 DCMI (JS\')'
             ] 
         }
     }
-
-    //let test = 'Copyright 1995-2019 DCMI (JS\')'
-    //test.replace("\'", "matan rules!")
-    //console.log("TEST", test.replace("'", `\\\\'`), "\n\n");
 
     if (req.body.instances.length !== req.body.newAttrib.length ) {
         //throw some error
         console.log("old and new must have the same length");
     }
-    //!check that instances contains only URI
-    //!check valid URI 
 
     let parsed_and_formatted_values = "";
 
     for (let i = 0; i < req.body.instances.length; i++) {
-        req.body.newAttrib[i] = req.body.newAttrib[i].replace(`'`, `\\'`); // an instance must be an URI and hence will not have any illegal chars
-        //if (!(isValidURL(req.body.instances[i]))) {
-        //    console.error('got invalid URI', i);
-        //}
-        //req.body.newAttrib[i] = `'${req.body.newAttrib[i]}'`
-                
-        parsed_and_formatted_values+=`(${req.body.instances[i]} '${req.body.newAttrib[i]}')\n`        
+        //!check that instances contains only URI
+        //!check valid URI 
+        parsed_and_formatted_values+=`(${req.body.instances[i]} "${req.body.newAttrib[i]}")\n`        
     }
-    console.log(parsed_and_formatted_values);
+    //console.log(parsed_and_formatted_values);
 
     const query_insert = `
         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         PREFIX owl: <http://www.w3.org/2002/07/owl#>
 
         DELETE { graph ?g { ?instanceName ${req.body.attribute} ?oldAttribValue } } 
-        INSERT { graph ?g { ?instanceName ${req.body.attribute} ?newAttribValue } }
+        INSERT { graph ?g { ?instanceName ${req.body.attribute} ?literal } }
         WHERE { graph ?g {
             values (?instanceName ?newAttribValue) { 
             ${parsed_and_formatted_values}
             }
             ?instanceName rdf:type ${req.body.class} . 
             ?instanceName ${req.body.attribute} ?oldAttribValue
+            BIND(DATATYPE(?oldAttribValue) AS ?dt)
+            BIND(STRDT(?newAttribValue, ?dt) AS ?literal)
             }
         }
         `
