@@ -98,4 +98,44 @@ async function getItems( client, classURI, propertiesList ){
     return items;
 }
 
-module.exports = { getClasses, getProperties, getItems }
+
+async function updateDB(client, propertyWeUpdated, instanceURIs, propertyValues){ 
+    let parsed_and_formatted_values = "";
+
+    for (let i = 0; i < instanceURIs.length; i++) {
+        //!check that instances contains only URI
+        //!check valid URI 
+        parsed_and_formatted_values+=`(${instanceURIs[i]} "${propertyValues[i]}")\n`        
+    }
+
+    const query_insert = `
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX owl: <http://www.w3.org/2002/07/owl#>
+
+        DELETE { graph ?g { ?instanceName ${propertyWeUpdated} ?oldAttribValue } } 
+        INSERT { graph ?g { ?instanceName ${propertyWeUpdated} ?literal } }
+        WHERE { graph ?g {
+            values (?instanceName ?newAttribValue) { 
+            ${parsed_and_formatted_values}
+            }
+            
+            ?instanceName ${propertyWeUpdated} ?oldAttribValue
+            BIND(DATATYPE(?oldAttribValue) AS ?dt)
+            BIND(STRDT(?newAttribValue, ?dt) AS ?literal)
+            }
+        }
+        `// removed: ?instanceName rdf:type ${req.body.class} .
+        
+        
+    try {//this try catch may be unnecerssery since express catches results 
+        const res = await client.query.update(query_insert);// returned undefined... hard to know if operation went through
+        console.log(res);
+    } catch (error) {
+        console.error(error);
+        throw new Error(error)
+    }
+    return {res: "the update went through succesfully."}
+}
+
+
+module.exports = { getClasses, getProperties, getItems, updateDB }
