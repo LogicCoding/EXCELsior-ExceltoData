@@ -1,6 +1,7 @@
 const { getClasses, getProperties, getItems , updateDB} = require('./queries.js');
 const { RequestError, errorHandler } = require('./errors');
 const { makeErrorMessage } = require('./utils');
+const { jsonToExcel } = require('./ConvertToCSV');
 
 const express = require('express');
 const SparqlClient = require('sparql-http-client/ParsingClient');
@@ -64,7 +65,11 @@ app.get('/csv', async (req, res, next) => {
     try{
         const items = await getItems(client, classURI, properties);
         // can use res.download for actual CSV
-        res.json(items);
+        const csvFile = jsonToExcel(items);
+        res.set({"Content-Disposition":"attachment; filename=excelsiorData.csv"});
+        res.send(csvFile);
+        //res.json(items);
+        
     }
     catch(error){
         next(error);

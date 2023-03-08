@@ -1,4 +1,4 @@
-import { Parser } from '@json2csv/plainjs';
+const { Parser } = require('json2csv');
 
 //Uses https://www.npmjs.com/package/@json2csv/plainjs
 function jsonToExcel(obj) {
@@ -7,3 +7,4 @@ function jsonToExcel(obj) {
     console.log(csv)
     return csv
 }
+module.exports = { jsonToExcel }
