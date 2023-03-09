@@ -18,7 +18,7 @@ const upload = multer({storage: multer.memoryStorage()}); // file upload, only u
 app.get('/classes', async (req, res, next) => {
     let errMsg = makeErrorMessage(req, ['endpointUrl']);
     if(errMsg != null){
-        next(new RequestError(errMsg));
+        return next(new RequestError(errMsg));
     }
 
     const endpointUrl =  req.body.endpointUrl;
@@ -29,14 +29,14 @@ app.get('/classes', async (req, res, next) => {
         res.status(200).json(classes);
     }
     catch(error){
-        next(error);
+        return next(error);
     }
 });
 
 app.get('/properties', async (req, res, next) => {
     let errMsg = makeErrorMessage(req, ['endpointUrl', 'classURI']);
     if(errMsg != null){
-        next(new RequestError(errMsg));
+        return next(new RequestError(errMsg));
     }
 
     const endpointUrl =  req.body.endpointUrl;
@@ -48,14 +48,14 @@ app.get('/properties', async (req, res, next) => {
         res.status(200).json(properties);
     }
     catch(error){
-        next(error);
+        return next(error);
     }
 });
 
 app.get('/csv', async (req, res, next) => {
     let errMsg = makeErrorMessage(req, ['endpointUrl', 'classURI', 'properties']);
     if(errMsg != null){
-        next(new RequestError(errMsg));
+        return next(new RequestError(errMsg));
     }
 
     const endpointUrl = req.body.endpointUrl;
@@ -69,21 +69,25 @@ app.get('/csv', async (req, res, next) => {
         res.json(items);
     }
     catch(error){
-        next(error);
+        return next(error);
     }
 });
 
 //CSV is currently parsed on the frontend. 
 //This allows us to let the user know if there are any issues before they send to DB 
 app.post('/update', upload.single("csv_file"), async (req, res, next) => {
-    let errMsg = makeErrorMessage(req, ["updateUrl", "file"]);
+    let errMsg = makeErrorMessage(req, ["updateUrl"]);
     if(errMsg != null){
-        //next(new RequestError(errMsg));
+        return next(new RequestError(errMsg));
     }
 
+    if(!(Object.hasOwn(req, "file"))){
+        return next(new RequestError("No file uploaded"));
+    }
+    
     const updateUrl = req.body.updateUrl;
 
-    var propertiesMap = null;
+    let propertiesMap = null;
     if(Object.hasOwn(req.body, "propertiesMap")){
         propertiesMap = JSON.parse(req.body.propertiesMap);
     }
@@ -95,10 +99,9 @@ app.post('/update', upload.single("csv_file"), async (req, res, next) => {
     try {
         const client = new SparqlClient({ updateUrl });    
         const updateRes = await updateDB(client, items);
-
         res.status(200).json(updateRes);        
     } catch (error) {
-        next(error)         
+       return next(error)         
     }
 
 });

@@ -81,7 +81,7 @@ function makeErrorMessage( req, params ){
         if(!(Object.hasOwn(req.body, param))){
 
             if(errMsg == null){
-                errMsg = "Request is missing params: "
+                errMsg = "Request is missing params: ";
             }
             else{
                 errMsg += ', ';
