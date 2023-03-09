@@ -1,7 +1,7 @@
 // utility function to process query results for classes and properties
 // res: list of objects from ParsingClient query result
 function makeClassOrPropertyList( res ){
-    var list = [];
+    let list = [];
 
     for(const row of res){
         let URI = row['URI'].value;
