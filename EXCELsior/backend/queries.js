@@ -1,4 +1,4 @@
-const { makeClassOrPropertyList, makePropertiesString } = require('./utils.js');
+const { makeClassOrPropertyList, makePropertiesString, makeValuesString } = require('./utils.js');
 
 async function getClasses( client ){
     // query to get all classes, their labels, and
@@ -98,36 +98,23 @@ async function getItems( client, classURI, propertiesList ){
     return items;
 }
 
-
-async function updateDB(client, propertyWeUpdated, instanceURIs, propertyValues){ 
-    let parsed_and_formatted_values = "";
-
-    for (let i = 0; i < instanceURIs.length; i++) {
-        //!check that instances contains only URI
-        //!check valid URI 
-        parsed_and_formatted_values+=`(${instanceURIs[i]} "${propertyValues[i]}")\n`        
-    }
-
-    const query_insert = `
-        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-        PREFIX owl: <http://www.w3.org/2002/07/owl#>
-
-        DELETE { graph ?g { ?instanceName ${propertyWeUpdated} ?oldAttribValue } } 
-        INSERT { graph ?g { ?instanceName ${propertyWeUpdated} ?literal } }
+// updates database given array of objects containing key/val pairs for id and
+// any number of properties
+async function updateDB(client, items){ 
+    var values = makeValuesString(items);
+    var query = `
+        DELETE { graph ?g { ?instance ?prop ?oldVal } } 
+        INSERT { graph ?g { ?instance ?prop ?newVal } }
         WHERE { graph ?g {
-            values (?instanceName ?newAttribValue) { 
-            ${parsed_and_formatted_values}
+            values (?instance ?prop ?newVal) { 
+                ${values}
             }
-            
-            ?instanceName ${propertyWeUpdated} ?oldAttribValue
-            BIND(DATATYPE(?oldAttribValue) AS ?dt)
-            BIND(STRDT(?newAttribValue, ?dt) AS ?literal)
-            }
-        }
-        `// removed: ?instanceName rdf:type ${req.body.class} .
-        
-        
-    const res = await client.query.update(query_insert);// returned undefined... hard to know if operation went through
+            ?instance ?prop ?oldVal
+            BIND( IF(isLiteral(?oldVal), STRDT(?newVal, DATATYPE(?oldVal)), ?newVal) AS ?new)
+        }}
+        `
+
+    const res = await client.query.update(query);// returned undefined... hard to know if operation went through
     
     return {res : res, label: "the update went through succesfully (res should be undefined)."}
 }

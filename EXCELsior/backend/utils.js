@@ -46,6 +46,34 @@ function makePropertiesString( properties ){
     return str;
 }
 
+function validURI( str ){
+    try{
+        return Boolean(new URL(str));
+    }
+    catch(err){
+        return false;
+    }
+}
+
+function makeValuesString( items ){
+    let str = "";
+
+    for(const item of items){
+        let instance  = item['id'];
+        for([key, val] of Object.entries(item)){
+            if(key != 'id'){
+                if(validURI(val)){  
+                    str += `(<${instance}> <${key}> <${val}>)`;
+                }
+                else{
+                    str += `(<${instance}> <${key}> "${val}")`;
+                }
+            }
+        }
+    }
+    return str;
+}
+
 function makeErrorMessage( req, params ){
     let errMsg = null;
 
@@ -66,4 +94,4 @@ function makeErrorMessage( req, params ){
     return errMsg;
 }
 
-module.exports = { makeClassOrPropertyList, makePropertiesString, makeErrorMessage };
+module.exports = { makeClassOrPropertyList, makePropertiesString, makeValuesString, makeErrorMessage };
