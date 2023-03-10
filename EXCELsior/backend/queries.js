@@ -1,9 +1,9 @@
-const { makeClassOrPropertyList, makePropertiesString } = require('./utils.js');
+const { makeClassOrPropertyList, makePropertiesString, makeValuesString } = require('./utils.js');
 
 async function getClasses( client ){
     // query to get all classes, their labels, and
     // the count of objects in that class
-    var query = `
+    const query = `
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -21,7 +21,7 @@ async function getClasses( client ){
     `;
 
     // setup return object
-    var owlClasses = [];
+    let owlClasses = [];
 
     // execute query
     const res = await client.query.select(query);
@@ -34,7 +34,7 @@ async function getClasses( client ){
 // returns a list of properties given a class name
 // properties are strings
 async function getProperties( client, classURI ){
-    var query = `
+    const query = `
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
@@ -50,7 +50,7 @@ async function getProperties( client, classURI ){
     GROUP BY ?prop ?label
     `;
 
-    var properties = [];
+    let properties = [];
 
     const res = await client.query.select(query);
     properties = makeClassOrPropertyList(res);
@@ -61,8 +61,8 @@ async function getProperties( client, classURI ){
 // gets values of all given properties for all objects
 // of given class name
 async function getItems( client, classURI, propertiesList ){
-    var propertiesStr = makePropertiesString(propertiesList);
-    var query =`
+    const propertiesStr = makePropertiesString(propertiesList);
+    const query =`
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
     SELECT *
@@ -73,7 +73,7 @@ async function getItems( client, classURI, propertiesList ){
     }
     `;
 
-    var items = [];
+    let items = [];
 
     const res = await client.query.select(query);
     for(const row of res){
@@ -98,36 +98,23 @@ async function getItems( client, classURI, propertiesList ){
     return items;
 }
 
-
-async function updateDB(client, propertyWeUpdated, instanceURIs, propertyValues){ 
-    let parsed_and_formatted_values = "";
-
-    for (let i = 0; i < instanceURIs.length; i++) {
-        //!check that instances contains only URI
-        //!check valid URI 
-        parsed_and_formatted_values+=`(${instanceURIs[i]} "${propertyValues[i]}")\n`        
-    }
-
-    const query_insert = `
-        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-        PREFIX owl: <http://www.w3.org/2002/07/owl#>
-
-        DELETE { graph ?g { ?instanceName ${propertyWeUpdated} ?oldAttribValue } } 
-        INSERT { graph ?g { ?instanceName ${propertyWeUpdated} ?literal } }
+// updates database given array of objects containing key/val pairs for id and
+// any number of properties
+async function updateDB(client, items){ 
+    const values = makeValuesString(items);
+    const query = `
+        DELETE { graph ?g { ?instance ?prop ?oldVal } } 
+        INSERT { graph ?g { ?instance ?prop ?newVal } }
         WHERE { graph ?g {
-            values (?instanceName ?newAttribValue) { 
-            ${parsed_and_formatted_values}
+            values (?instance ?prop ?newVal) { 
+                ${values}
             }
-            
-            ?instanceName ${propertyWeUpdated} ?oldAttribValue
-            BIND(DATATYPE(?oldAttribValue) AS ?dt)
-            BIND(STRDT(?newAttribValue, ?dt) AS ?literal)
-            }
-        }
-        `// removed: ?instanceName rdf:type ${req.body.class} .
-        
-        
-    const res = await client.query.update(query_insert);// returned undefined... hard to know if operation went through
+            ?instance ?prop ?oldVal
+            BIND( IF(isLiteral(?oldVal), STRDT(?newVal, DATATYPE(?oldVal)), ?newVal) AS ?new)
+        }}
+        `
+
+    const res = await client.query.update(query);// returned undefined... hard to know if operation went through
     
     return {res : res, label: "the update went through succesfully (res should be undefined)."}
 }
