@@ -1,8 +1,7 @@
 const { getClasses, getProperties, getItems , updateDB} = require('./queries.js');
-const { processCSV } = require('./csv.js')
+const { processCSV, jsonToExcel } = require('./csv.js')
 const { RequestError, errorHandler } = require('./errors');
 const { makeErrorMessage } = require('./utils');
-const { jsonToExcel } = require('./ConvertToCSV');
 
 const express = require('express');
 const multer = require('multer');
