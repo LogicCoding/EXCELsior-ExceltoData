@@ -1,5 +1,5 @@
 //import { Parser } from '@json2csv/plainjs';
-const { Parser } = require('json2csv');
+const { Parser } = require('@json2csv/plainjs');
 
 //Uses https://www.npmjs.com/package/@json2csv/plainjs
 
