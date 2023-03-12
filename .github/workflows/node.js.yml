@@ -13,7 +13,7 @@ jobs:
   build-node:
     defaults:
       run:
-        working-directory: /__w/EXCELsior-ExceltoData/EXCELsior-ExceltoData/EXCELsior/backend 
+        working-directory: ./EXCELsior/backend 
     runs-on: ubuntu-latest
     container: node:18
     steps:
