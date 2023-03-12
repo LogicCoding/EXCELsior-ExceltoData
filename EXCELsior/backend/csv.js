@@ -1,6 +1,8 @@
 //import { Parser } from '@json2csv/plainjs';
+const { Parser } = require('@json2csv/plainjs');
 
 //Uses https://www.npmjs.com/package/@json2csv/plainjs
+
 function jsonToExcel(obj) {
     const parser = new Parser({ delimiter: ','})
     const csv = parser.parse(obj)
@@ -36,4 +38,4 @@ function processCSV( csv_str, propertiesMap = null ){
     return items;
 }
 
-module.exports = { processCSV }
+module.exports = { processCSV, jsonToExcel }
