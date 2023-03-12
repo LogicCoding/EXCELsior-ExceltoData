@@ -5,9 +5,9 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "matan-ci" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "matan-ci" ]
 
 jobs:
   build-node:
