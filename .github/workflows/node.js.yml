@@ -33,6 +33,7 @@ jobs:
     container: node:18
     steps:
     - uses: actions/checkout@v3
+    - run: npm install --save-dev @babel/plugin-transform-modules-commonjs
     - run: npm ci
     - run: npm run build # currently not treating warnings as errors -- change in package.json 
     - run: npm run test
