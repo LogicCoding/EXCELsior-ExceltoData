@@ -195,6 +195,14 @@ const Three = (props) => {
     const [info3, setInfo3] = useState({});
     const [error, setError] = useState("");
   
+
+    axios.get(backend_url + '/properties', {params: {'endpointUrl': props.user.url, 'classURI':props.user.class}})
+    .then(res => {
+      const attributesGet = res.data;
+      this.setState({ attributes: attributesGet });
+    })
+
+
     const onInputChanged = (event) => {
       const targetName = event.target.name;
       const targetValue = event.target.value;
@@ -264,6 +272,14 @@ const Three = (props) => {
 const Five = (props) => {
   const [info3, setInfo3] = useState({});
   const [error, setError] = useState("");
+
+
+
+  axios.get(backend_url + '/csv', {params: {'endpointUrl': props.user.url, 'classURI':props.user.class, 'properties': props.user.attributes}})
+    // .then(res => {
+    //   const attributesGet = res.data;
+    //   this.setState({ attributes: attributesGet });
+    // })
 
   const onInputChanged = (event) => {
     const targetName = event.target.name;
