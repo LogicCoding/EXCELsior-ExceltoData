@@ -129,6 +129,7 @@ const One = (props) => {
 const Two = (props) => {
   const [info2, setInfo2] = useState({});
   const [error, setError] = useState("");
+  const [classes, setClasses] = useState([]);
   //const json = JSON.stringify({endpointUrl: props.user.url})
   //console.log(json)
   axios.get(backend_url + '/classes', {params: {'endpointUrl': props.user.url}})
@@ -136,9 +137,9 @@ const Two = (props) => {
       const classesGet = res.data;
       //console.log("found get")
       //console.log(classesGet)
-      this.setState({ classes: classesGet });
+      setClasses(classesGet)
     })
-  
+
   
   const onInputChanged = (event) => {
     const targetName = event.target.name;
@@ -159,42 +160,31 @@ const Two = (props) => {
     }
   };
 
+  const handleChange = () => {
+    console.log("hell")
+  }
+
   return (
     <div>
       <span style={{ color: "red" }}>{error}</span>
       <h1>ExcelSior: {props.user.path}</h1>
       <h2>Please select the corresponding class you would like to query.</h2>
+
       <FormGroup className="FormGroup">
         <Label className="Label">
           Provided Database: <b className="Label">{props.user.url || ""}</b>
         </Label>
       </FormGroup>
       <FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo2('Class 1')} /> {' '}
-                Class 1
-            </Label>
+      <Label>Select</Label>
+        <Input type="select" name="selected_class" onChange={handleChange}>
+          {classes.map(option => (
+            <option key={option.URI} value={option.URI}>
+              {option.URI}
+            </option>
+          ))}
+        </Input>
         </FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo2('Class 2')} />{' '}
-                Class 2
-            </Label>
-        </FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo2('Class 3')} />{' '}
-                Class 3
-            </Label>
-        </FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo2('Class 4')} />{' '}
-                Class 4
-            </Label>
-        </FormGroup>
-      </FormGroup>
       <br />
       <ActionButtons {...props} nextStep={validate2} />
     </div>
