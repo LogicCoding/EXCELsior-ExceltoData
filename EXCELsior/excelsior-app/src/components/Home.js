@@ -1,20 +1,21 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Badge, List } from "reactstrap";
+import 'bootstrap/dist/css/bootstrap.min.css';
 const Home = () => {
     return (
         <div>
-            <h1>Welcome to Excelsior</h1>
-            <ul>
-                <li>
-                    <Link to="/">Home</Link>
+            <h1 style={{justifyContent:"center", alignItems:"center", display:"flex", marginTop: 40, marginBottom:40}} >Welcome to Excelsior</h1>
+            <List>
+                <li style={{justifyContent:"center", display:"flex", marginBottom:10, fontSize:30}}>
+                    <Badge href="#">Home</Badge>
                 </li>
-                <li>
-                    <Link to="/download">Download</Link>
+                <li style={{justifyContent:"center", display:"flex", marginBottom:10, fontSize:30}}>
+                    <Badge href="/download">Download</Badge>
                 </li>
-                <li>
-                    <Link to="/upload">Upload</Link>
+                <li style={{justifyContent:"center", display:"flex", marginBottom:10, fontSize:30}}>
+                    <Badge href="/upload">Upload</Badge>
                 </li>
-            </ul>
+            </List>
         </div>
     );
 };
