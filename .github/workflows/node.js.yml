@@ -19,8 +19,8 @@ jobs:
     - run: npm --version 
     - uses: actions/checkout@v3
     - run: pwd
-    - run: ls -la 
     - run: cd  EXCELsior/backend 
+    - run: ls -la 
     - run: npm install
     - run: npm run build --if-present
     - run: npm test
