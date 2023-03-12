@@ -5,6 +5,7 @@ const { RequestError, errorHandler } = require('./errors');
 const { makeErrorMessage } = require('./utils');
 
 const express = require('express');
+const cors = require('cors')
 const multer = require('multer');
 const SparqlClient = require('sparql-http-client/ParsingClient');
 
@@ -13,6 +14,7 @@ const port = 3010;
 
 // Middleware
 app.use(express.json()) // JSON parser
+app.use(cors()) // Cross Origin Resource Sharing
 const upload = multer({storage: multer.memoryStorage()}); // file upload, only used on /update route
 
 // Routes
