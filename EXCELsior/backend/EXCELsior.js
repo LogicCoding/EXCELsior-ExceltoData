@@ -19,16 +19,21 @@ const upload = multer({storage: multer.memoryStorage()}); // file upload, only u
 
 // Routes
 app.get('/classes', async (req, res, next) => {
-    let errMsg = makeErrorMessage(req, ['endpointUrl']);
-    if(errMsg != null){
-        return next(new RequestError(errMsg));
-    }
+    //console.log(req.headers)
+    //console.log(req.body)
+    //console.log(req.params)
+    //console.log(req.query)
+    // let errMsg = makeErrorMessage(req, ['endpointUrl']);
+    // if(errMsg != null){
+    //     return next(new RequestError(errMsg));
+    // }
 
-    const endpointUrl =  req.body.endpointUrl;
-
+    const endpointUrl =  req.query.endpointUrl;
+    //console.log(endpointUrl)
     const client = new SparqlClient({ endpointUrl });
     try{
         const classes = await getClasses(client);
+        //console.log(classes)
         res.status(200).json(classes);
     }
     catch(error){

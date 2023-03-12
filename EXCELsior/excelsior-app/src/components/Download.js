@@ -3,6 +3,9 @@ import { Stepper, Step } from "react-form-stepper";
 import { MdDescription } from "react-icons/md";
 import StepWizard from "react-step-wizard";
 import { Row, Col, Button, FormGroup, Label, Input } from "reactstrap";
+import axios from "axios";
+
+const backend_url = 'http://127.0.0.1:3010'
 
 const ActionButtons = (props) => {
   const handleBack = () => {
@@ -126,7 +129,17 @@ const One = (props) => {
 const Two = (props) => {
   const [info2, setInfo2] = useState({});
   const [error, setError] = useState("");
-
+  //const json = JSON.stringify({endpointUrl: props.user.url})
+  //console.log(json)
+  axios.get(backend_url + '/classes', {params: {'endpointUrl': props.user.url}})
+    .then(res => {
+      const classesGet = res.data;
+      //console.log("found get")
+      //console.log(classesGet)
+      this.setState({ classes: classesGet });
+    })
+  
+  
   const onInputChanged = (event) => {
     const targetName = event.target.name;
     const targetValue = event.target.value;
@@ -210,7 +223,7 @@ const Three = (props) => {
         props.userCallback(info3);
       }
     };
-  
+    
     return (
       <div>
         <span style={{ color: "red" }}>{error}</span>
