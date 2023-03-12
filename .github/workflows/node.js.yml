@@ -5,9 +5,9 @@ name: backend and frotend CI
 
 on:
   push:
-    branches: [ "matan-ci" ]
+    branches: [ "matan-ci", "main" ]
   pull_request:
-    branches: [ "matan-ci" ]
+    branches: [ "matan-ci", "main" ]
 
 jobs:
   build-node:
@@ -33,7 +33,7 @@ jobs:
     container: node:18
     steps:
     - uses: actions/checkout@v3
-    - run: npm install --save-dev @babel/plugin-transform-modules-commonjs
+    #- run: npm install --save-dev @babel/plugin-transform-modules-commonjs
     - run: npm ci
     - run: npm run build # currently not treating warnings as errors -- change in package.json 
     # - run: npm run test -- can't run because the react scripts don't configure jest to allow EXCMascript moddule syntax, which we use all over
