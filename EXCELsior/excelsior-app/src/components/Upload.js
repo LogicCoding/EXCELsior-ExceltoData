@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Stepper, Step } from "react-form-stepper";
 import { MdDescription } from "react-icons/md";
 import StepWizard from "react-step-wizard";
-import { Row, Col, Button, FormGroup, Label, Input } from "reactstrap";
+import { Row, Col, Button, FormGroup, Label, Input, FormText, Table } from "reactstrap";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import axios from "axios";
 
 const ActionButtons = (props) => {
   const handleBack = () => {
@@ -22,15 +24,15 @@ const ActionButtons = (props) => {
       <Row>
         {props.currentStep > 1 && (
           <Col>
-            <Button className="ActionButtons" onClick={handleBack}>Back</Button>
+            <Button onClick={handleBack}>Back</Button>
           </Col>
         )}
         <Col>
           {props.currentStep < props.totalSteps && (
-            <Button className="ActionButtons" onClick={handleNext}>Next</Button>
+            <Button onClick={handleNext}>Next</Button>
           )}
           {props.currentStep === props.totalSteps && (
-            <Button className="ActionButtons" onClick={handleFinish}>Finish</Button>
+            <Button onClick={handleFinish}>Finish</Button>
           )}
         </Col>
       </Row>
@@ -39,6 +41,8 @@ const ActionButtons = (props) => {
 };
 
 const One = (props) => {
+  console.log("one");
+  console.log(props.user);
   const [info1, setInfo1] = useState({});
   const [error, setError] = useState("");
 
@@ -53,7 +57,7 @@ const One = (props) => {
   };
 
   const validate = () => {
-    if (!info1.name) setError("Database URL Required");
+    if (!info1.file) setError("File Required");
     else {
       setError("");
       props.nextStep();
@@ -64,17 +68,13 @@ const One = (props) => {
   return (
     <div className="FormGroup">
       <span style={{ color: "red" }}>{error}</span>
-      <h1>Welcome to ExcelSior</h1>
-      <h2>In order to begin, please enter a valid Database URL.</h2>
+      <h1>Welcome to ExcelSior: Upload</h1>
+      <h2>In order to begin, please upload a .csv file.</h2>
       <FormGroup>
-        <Label></Label>
-        <Input
-          type="text"
-          name="name"
-          placeholder="Enter a URL"
-          onChange={onInputChanged}
-          className="FormInput"
-        />
+          <Input type="file" name="file" accept=".csv" onChange={onInputChanged}/>
+          <FormText color="muted">
+            Any other file type will not be accepted.
+          </FormText>
       </FormGroup>
       <br />
       <ActionButtons {...props} nextStep={validate}/>
@@ -85,6 +85,8 @@ const One = (props) => {
 const Two = (props) => {
   const [info2, setInfo2] = useState({});
   const [error, setError] = useState("");
+  const [options, setOptions] = useState([]);
+  const [selected, setSelected] = useState(0);
 
   const onInputChanged = (event) => {
     const targetName = event.target.name;
@@ -105,43 +107,49 @@ const Two = (props) => {
     }
   };
 
+  const handleChange = (event) => {
+    setSelected(event.target.value);
+  }
+
   return (
     <div>
       <span style={{ color: "red" }}>{error}</span>
-      <h1>Please select the corresponding class you would like to query.</h1>
-      <FormGroup className="FormGroup">
-        <Label className="Label">
-          Provided Database: <b className="Label">{props.user.name || ""}</b>
+      <h1>ExcelSior: Upload</h1>
+      <h2>Please select the corresponding class you would like to query.</h2>
+      <FormGroup>
+        <Label>
+          Provided Database: <b>{props.user.file || ""}</b>
         </Label>
       </FormGroup>
       <FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo2('Class 1')} /> {' '}
-                Class 1
-            </Label>
-        </FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo2('Class 2')} />{' '}
-                Class 2
-            </Label>
-        </FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo2('Class 3')} />{' '}
-                Class 3
-            </Label>
-        </FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo2('Class 4')} />{' '}
-                Class 4
-            </Label>
-        </FormGroup>
+        <Label>Select</Label>
+        <Input type="select" name="selected_class" onChange={handleChange}>
+          {options.map(option => (
+            <option key={option.URI} value={option.URI}>
+              {option.URI}
+            </option>
+          ))}
+        </Input>
+      </FormGroup>
+      <FormGroup>
+        <Label>Selected: <b>{selected || "None"}</b></Label>
+        <Input type="textarea" name="renamedclass"></Input>
+      </FormGroup>
+      <Button >Rename</Button><br />
+      <Label></Label>
+      <ActionButtons {...props} nextStep={validate2} />
+      <Table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>URI</th>
+            <th>Label</th>
+          </tr>
+        </thead>
+      </Table>
+      <FormGroup>
       </FormGroup>
       <br />
-      <ActionButtons {...props} nextStep={validate2} />
     </div>
   );
 };
@@ -172,37 +180,38 @@ const Three = (props) => {
     return (
       <div>
         <span style={{ color: "red" }}>{error}</span>
-        <h1>Please select the corresponding attribute you would like to query.</h1>
+        <h1>ExcelSior: {props.user.path}</h1>
+        <h2>Please select the corresponding attribute you would like to query.</h2>
         <FormGroup>
           <Label>
-            Provided Database: <b>{props.user.name || ""}</b>
+            Provided Database: <b>{props.user.url || ""}</b>
           </Label>
         </FormGroup>
-        <FormGroup className="Radio">
+        <FormGroup>
           <Label>
             Selected Class: <b>Class 1</b>
           </Label>
         </FormGroup>
         <FormGroup>
-        <FormGroup check className="Radio">
+        <FormGroup check>
             <Label check>
                 <Input type="radio" name="radio1" onClick={() => setInfo3('Attribute 1')} /> {' '}
                 Attribute 1
             </Label>
         </FormGroup>
-        <FormGroup check className="Radio">
+        <FormGroup check>
             <Label check>
                 <Input type="radio" name="radio1" onClick={() => setInfo3('Attribute 2')} />{' '}
                 Attribute 2
             </Label>
         </FormGroup>
-        <FormGroup check className="Radio">
+        <FormGroup check>
             <Label check>
                 <Input type="radio" name="radio1" onClick={() => setInfo3('Attribute 3')} />{' '}
                 Attribute 3
             </Label>
         </FormGroup>
-        <FormGroup check className="Radio">
+        <FormGroup check>
             <Label check>
                 <Input type="radio" name="radio1" onClick={() => setInfo3('Attribute 4')} />{' '}
                 Attribute 4
@@ -271,7 +280,8 @@ const Four = (props) => {
     return (
       <div>
         <h2>Summary</h2>
-        <p>Provided Database: <b>{props.user.name}</b></p>
+        <p>Action: {props.user.path}</p>
+        <p>Provided Database: <b>{props.user.url}</b></p>
         <p>Class: <b>Class 1</b></p>
         <p>Attribute: <b>Attribute 3</b></p>
         <br />
@@ -280,7 +290,7 @@ const Four = (props) => {
     );
   };
 
-const Main = () => {
+const Upload = () => {
   const [stepWizard, setStepWizard] = useState(null);
   const [user, setUser] = useState({});
   const [activeStep, setActiveStep] = useState(0);
@@ -296,6 +306,8 @@ const Main = () => {
       ...user,
       ...val
     }));
+    console.log("here");
+    console.log(user);
   };
 
   const handleStepChange = (e) => {
@@ -327,4 +339,4 @@ const Main = () => {
   );
 };
 
-export default Main;
+export default Upload;
