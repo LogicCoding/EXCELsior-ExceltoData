@@ -17,9 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     container: node:18
     steps:
+    - uses: actions/checkout@v3
     - run: node --version
     - run: npm --version 
-    - uses: actions/checkout@v3
     - run: pwd
     - run: cd  EXCELsior/backend 
     - run: ls -la 
