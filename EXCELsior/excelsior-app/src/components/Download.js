@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Stepper, Step } from "react-form-stepper";
 import { MdDescription } from "react-icons/md";
 import StepWizard from "react-step-wizard";
@@ -61,6 +61,7 @@ const Base = (props) => {
       setError("");
       props.nextStep();
       props.userCallback(info0)
+
     }
   };
 
@@ -81,8 +82,7 @@ const Base = (props) => {
 };
 
 const One = (props) => {
-  console.log("one");
-  console.log(props.user);
+  console.log("ONE: ", props.user);
   const [info1, setInfo1] = useState({});
   const [error, setError] = useState("");
 
@@ -96,12 +96,20 @@ const One = (props) => {
     }));
   };
 
-  const validate = () => {
+  const validate = async () => {
     if (!info1.url) setError("Database URL Required");
     else {
       setError("");
-      props.nextStep();
-      props.userCallback(info1);
+      await axios.get(backend_url + '/classes', {params: {'endpointUrl': info1.url}})
+      .then(res => {
+        const classesGet = res.data;
+        //console.log("found get");
+        //console.log(classesGet);
+        info1["classes"] = classesGet;
+        props.nextStep();
+        props.userCallback(info1);
+        console.log("PostUserCallBack1", info1);
+      })
     }
   };
 
@@ -127,18 +135,11 @@ const One = (props) => {
 };
 
 const Two = (props) => {
+  console.log("TWO:", props.user);
   const [info2, setInfo2] = useState({});
   const [error, setError] = useState("");
-  const [classes, setClasses] = useState([]);
   //const json = JSON.stringify({endpointUrl: props.user.url})
   //console.log(json)
-  axios.get(backend_url + '/classes', {params: {'endpointUrl': props.user.url}})
-    .then(res => {
-      const classesGet = res.data;
-      //console.log("found get")
-      //console.log(classesGet)
-      setClasses(classesGet)
-    })
 
   
   const onInputChanged = (event) => {
@@ -152,16 +153,24 @@ const Two = (props) => {
   };
 
   const validate2 = () => {
-    if (info2.classchoice) setError("Class must be selected.");
+    if (info2.class) setError("Class must be selected.");
     else {
       setError("");
-      props.nextStep();
-      props.userCallback(info2);
+      console.log("Props.User at Validate2", props.user);
+      axios.get(backend_url + '/properties', {params: {'endpointUrl': props.user.url, 'classURI': props.user.class}})
+      .then(res => {
+        const attributesGet = res.data;
+        console.log("AttributesGet: ", attributesGet)
+        info2["attributes"] = attributesGet;
+        props.nextStep();
+        props.userCallback(info2);
+        console.log("PostUserCallBack2", info2);
+      })
     }
   };
 
-  const handleChange = () => {
-    console.log("hell")
+  const handleChange = (event) => {
+    props.user.class = event.target.value
   }
 
   return (
@@ -177,12 +186,12 @@ const Two = (props) => {
       </FormGroup>
       <FormGroup>
       <Label>Select</Label>
-        <Input type="select" name="selected_class" onChange={handleChange}>
-          {classes.map(option => (
+        <Input type="select" name="class" onChange={handleChange}>
+          {props.user.classes? props.user.classes.map(option => (
             <option key={option.URI} value={option.URI}>
               {option.URI}
             </option>
-          ))}
+          )): ""}
         </Input>
         </FormGroup>
       <br />
@@ -192,15 +201,9 @@ const Two = (props) => {
 };
 
 const Three = (props) => {
+    console.log("THREE:", props.user)
     const [info3, setInfo3] = useState({});
     const [error, setError] = useState("");
-  
-
-    axios.get(backend_url + '/properties', {params: {'endpointUrl': props.user.url, 'classURI':props.user.class}})
-    .then(res => {
-      const attributesGet = res.data;
-      this.setState({ attributes: attributesGet });
-    })
 
 
     const onInputChanged = (event) => {
@@ -217,15 +220,34 @@ const Three = (props) => {
       if (info3.age) setError("Attribute must be selected.");
       else {
         setError("");
-        props.nextStep();
-        props.userCallback(info3);
+        console.log("Validate3", props.user.properties);
+        axios.get(backend_url + '/csv', {params: {'endpointUrl': props.user.url, 'classURI':props.user.class, 'properties': props.user.properties}})
+         .then(res => {
+           const itemsGet = res.data;
+           console.log("itemsGet", itemsGet);
+           info3['results'] = itemsGet;
+           props.nextStep();
+           props.userCallback(info3);
+           console.log("PostUserCallBack3", info3);
+        })
       }
     };
     
+    const handleChange = (event) => {
+      var options = event.target.options;
+      var value = []
+      for (var i = 0, l = options.length; i < l; i++) {
+        if (options[i].selected) {
+          value.push(options[i].value);
+        }
+      }
+      props.user.properties = value;
+    }
+
     return (
       <div>
         <span style={{ color: "red" }}>{error}</span>
-        <h1>ExcelSior: {props.user.path}</h1>
+        <h1>ExcelSior: Download</h1>
         <h2>Please select the corresponding attribute you would like to query.</h2>
         <FormGroup>
           <Label>
@@ -234,52 +256,27 @@ const Three = (props) => {
         </FormGroup>
         <FormGroup className="Radio">
           <Label>
-            Selected Class: <b>Class 1</b>
+            Selected Class: <b>{props.user.class || ""}</b>
           </Label>
+          <Input multiple type="select" name="properties" onChange={handleChange}>
+            {props.user.attributes? props.user.attributes.map(option => (
+              <option key={option.URI} value={option.URI}>
+                {option.URI}
+              </option>
+            )): ""}
+          </Input> 
         </FormGroup>
         <FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo3('Attribute 1')} /> {' '}
-                Attribute 1
-            </Label>
-        </FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo3('Attribute 2')} />{' '}
-                Attribute 2
-            </Label>
-        </FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo3('Attribute 3')} />{' '}
-                Attribute 3
-            </Label>
-        </FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo3('Attribute 4')} />{' '}
-                Attribute 4
-            </Label>
-        </FormGroup>
       </FormGroup>
         <br />
         <ActionButtons {...props} nextStep={validate3} />
       </div>
     );
   };
-
+/*
 const Five = (props) => {
   const [info3, setInfo3] = useState({});
   const [error, setError] = useState("");
-
-
-
-  axios.get(backend_url + '/csv', {params: {'endpointUrl': props.user.url, 'classURI':props.user.class, 'properties': props.user.attributes}})
-    // .then(res => {
-    //   const attributesGet = res.data;
-    //   this.setState({ attributes: attributesGet });
-    // })
 
   const onInputChanged = (event) => {
     const targetName = event.target.name;
@@ -319,24 +316,34 @@ const Five = (props) => {
       <ActionButtons {...props} nextStep={validate3} />
     </div>
   );
-};
+};*/
 
 const Four = (props) => {
-    console.log("step4 receive user object");
-    console.log(props.user);
+    console.log("FOUR: ", props.user);
   
     const handleLastStep = () => {
       props.lastStep();
       props.completeCallback();
     };
   
+    const downloadResults = () => {
+      const blob = new Blob([props.user.results], {type: 'text/csv'})
+      const element = document.createElement("a");
+      element.href = URL.createObjectURL(blob);
+      element.download = "downloadtest.csv";
+      document.body.appendChild(element);
+      element.click();
+    }
+
     return (
       <div>
         <h2>Summary</h2>
         <p>Action: {props.user.path}</p>
         <p>Provided Database: <b>{props.user.url}</b></p>
-        <p>Class: <b>Class 1</b></p>
-        <p>Attribute: <b>Attribute 3</b></p>
+        <p>Class: <b>{props.user.class || ""}</b></p>
+        <p>Attributes: <b>{props.user.properties || ""}</b></p>
+        <Button onClick={downloadResults}>Download Results</Button>
+        <p>Results: </p><p>{props.user.results || ""}</p>
         <br />
         <ActionButtons {...props} lastStep={handleLastStep} />
       </div>
@@ -386,7 +393,7 @@ const Download = () => {
         <One userCallback={assignUser} />
         <Two user={user} userCallback={assignUser} />
         <Three user={user} userCallback={assignUser} />
-        <Four user={user} completeCallback={handleComplete} />
+        <Four user={user} userCallback={assignUser} />
       </StepWizard>
     </div>
   );
