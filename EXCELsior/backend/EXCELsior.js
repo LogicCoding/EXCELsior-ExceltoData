@@ -20,7 +20,7 @@ const upload = multer({storage: multer.memoryStorage()}); // file upload, only u
 
 // Routes
 app.get('/classes', async (req, res, next) => {
-    let errMsg = makeErrorMessage(req, ['endpointUrl']);
+    let errMsg = makeErrorMessage(req.query, ['endpointUrl']);
     if(errMsg != null){
         return next(new RequestError(errMsg));
     }
@@ -38,15 +38,13 @@ app.get('/classes', async (req, res, next) => {
 });
 
 app.get('/properties', async (req, res, next) => {
-    let errMsg = makeErrorMessage(req, ['endpointUrl', 'classURI']);
+    let errMsg = makeErrorMessage(req.query, ['endpointUrl', 'classURI']);
     if(errMsg != null){
         return next(new RequestError(errMsg));
     }
 
     const endpointUrl =  req.query.endpointUrl;
     const classURI = req.query.classURI;
-
-    console.log(classURI)
 
     const client = new SparqlClient({ endpointUrl });
     try{
@@ -59,7 +57,7 @@ app.get('/properties', async (req, res, next) => {
 });
 
 app.get('/csv', async (req, res, next) => {
-    let errMsg = makeErrorMessage(req, ['endpointUrl', 'classURI', 'properties']);
+    let errMsg = makeErrorMessage(req.query, ['endpointUrl', 'classURI', 'properties']);
     if(errMsg != null){
         return next(new RequestError(errMsg));
     }
@@ -86,7 +84,7 @@ app.get('/csv', async (req, res, next) => {
 //CSV is currently parsed on the frontend. 
 //This allows us to let the user know if there are any issues before they send to DB 
 app.post('/update', upload.single("csv_file"), async (req, res, next) => {
-    let errMsg = makeErrorMessage(req, ["updateUrl"]);
+    let errMsg = makeErrorMessage(req.body, ["updateUrl"]);
     if(errMsg != null){
         return next(new RequestError(errMsg));
     }
