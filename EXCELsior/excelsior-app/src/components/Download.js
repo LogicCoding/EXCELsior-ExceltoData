@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Stepper, Step } from "react-form-stepper";
 import { MdDescription } from "react-icons/md";
 import StepWizard from "react-step-wizard";
-import { Row, Col, Button, FormGroup, Label, Input } from "reactstrap";
+import { Row, Col, Button, FormGroup, Label, Input, Badge } from "reactstrap";
 import axios from "axios";
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const backend_url = 'http://127.0.0.1:3010'
 
@@ -24,59 +25,25 @@ const ActionButtons = (props) => {
     <div>
       <Row>
         {props.currentStep > 1 && (
-          <Col>
-            <Button className="ActionButtons" onClick={handleBack}>Back</Button>
+          <Col className="Universal">
+            <Button style={{marginTop:8, fontSize:20}} onClick={handleBack}>Back</Button>
           </Col>
         )}
-        <Col>
+      </Row>
+      <Row>
+        <Col className="Universal">
           {props.currentStep < props.totalSteps && (
-            <Button className="ActionButtons" onClick={handleNext}>Next</Button>
-          )}
-          {props.currentStep === props.totalSteps && (
-            <Button className="ActionButtons" onClick={handleFinish}>Finish</Button>
+            <Button style={{marginTop:8, fontSize:20}} onClick={handleNext}>Next</Button>
           )}
         </Col>
       </Row>
-    </div>
-  );
-};
-
-const Base = (props) => {
-  const [info0, setInfo0] = useState({});
-  const [error, setError] = useState("");
-
-  const onBtnClick = (event) => {
-    const targetName = event.target.name;
-    const targetValue = event.target.value;
-
-    setInfo0((info0) => ({
-      ...info0,
-      [targetName]: targetValue
-    }));
-  };
-
-  const validate = () => {
-    if (!info0.path) setError("Upload or Download Required");
-    else {
-      setError("");
-      props.nextStep();
-      props.userCallback(info0)
-
-    }
-  };
-
-  return (
-    <div className="FormGroup">
-      <span style={{ color: "red" }}>{error}</span>
-      <h1>Welcome to ExcelSior</h1>
-      <h2>In order to begin, please choose to Download or Upload</h2>
-      <FormGroup>
-        <Label></Label>
-        <Button className="Buttons" name="path" value="Upload" onClick={onBtnClick}>Upload</Button>{' '}
-        <Button className="Buttons" name="path" value="Download" onClick={onBtnClick}>Download</Button>
-      </FormGroup>
-      <br />
-      <ActionButtons {...props} nextStep={validate}/>
+      <Row>
+        <Col className="Universal">
+        {props.currentStep === props.totalSteps && (
+            <Badge href="/" style={{marginTop:20, fontSize:20}} onClick={handleFinish}>Finish</Badge>
+          )}
+        </Col>
+      </Row>
     </div>
   );
 };
@@ -114,10 +81,10 @@ const One = (props) => {
   };
 
   return (
-    <div className="FormGroup">
+    <div>
       <span style={{ color: "red" }}>{error}</span>
-      <h1>Welcome to ExcelSior: Download</h1>
-      <h2>In order to begin, please enter a valid Database URL.</h2>
+      <h1 className="Universal">Welcome to ExcelSior: Download</h1>
+      <h2 className="Universal">In order to begin, please enter a valid Database URL.</h2>
       <FormGroup>
         <Label></Label>
         <Input
@@ -176,8 +143,8 @@ const Two = (props) => {
   return (
     <div>
       <span style={{ color: "red" }}>{error}</span>
-      <h1>ExcelSior: {props.user.path}</h1>
-      <h2>Please select the corresponding class you would like to query.</h2>
+      <h1 className="Universal">ExcelSior: Download</h1>
+      <h2 className="Universal">Please select the corresponding class you would like to query.</h2>
 
       <FormGroup className="FormGroup">
         <Label className="Label">
@@ -185,7 +152,6 @@ const Two = (props) => {
         </Label>
       </FormGroup>
       <FormGroup>
-      <Label>Select</Label>
         <Input type="select" name="class" onChange={handleChange}>
           {props.user.classes? props.user.classes.map(option => (
             <option key={option.URI} value={option.URI}>
@@ -247,15 +213,15 @@ const Three = (props) => {
     return (
       <div>
         <span style={{ color: "red" }}>{error}</span>
-        <h1>ExcelSior: Download</h1>
-        <h2>Please select the corresponding attribute you would like to query.</h2>
+        <h1 className="Universal">ExcelSior: Download</h1>
+        <h2 className="Universal">Please select the corresponding attribute you would like to query.</h2>
         <FormGroup>
-          <Label>
+          <Label className="Universal">
             Provided Database: <b>{props.user.url || ""}</b>
           </Label>
         </FormGroup>
         <FormGroup className="Radio">
-          <Label>
+          <Label className="Universal">
             Selected Class: <b>{props.user.class || ""}</b>
           </Label>
           <Input multiple type="select" name="properties" onChange={handleChange}>
@@ -330,22 +296,22 @@ const Four = (props) => {
       const blob = new Blob([props.user.results], {type: 'text/csv'})
       const element = document.createElement("a");
       element.href = URL.createObjectURL(blob);
-      element.download = "downloadtest.csv";
+      element.download = "ExcelSiorDownload.csv";
       document.body.appendChild(element);
       element.click();
     }
 
     return (
       <div>
-        <h2>Summary</h2>
-        <p>Action: {props.user.path}</p>
-        <p>Provided Database: <b>{props.user.url}</b></p>
-        <p>Class: <b>{props.user.class || ""}</b></p>
-        <p>Attributes: <b>{props.user.properties || ""}</b></p>
-        <Button onClick={downloadResults}>Download Results</Button>
+        <h2 className="Universal">Summary</h2>
+        <p className="Universal">ExcelSior: Download</p>
+        <p className="Universal">Provided Database: <b>{props.user.url}</b></p>
+        <p className="Universal">Class: <b>{props.user.class || ""}</b></p>
+        <p className="Universal">Attributes: {props.user.properties || ""}</p>
+        <p className="Universal"><Button onClick={downloadResults}>Download Results</Button></p>
+        <ActionButtons {...props} lastStep={handleLastStep} />
         <p>Results: </p><p>{props.user.results || ""}</p>
         <br />
-        <ActionButtons {...props} lastStep={handleLastStep} />
       </div>
     );
   };
@@ -377,7 +343,8 @@ const Download = () => {
   };
 
   const handleComplete = () => {
-    alert("You r done. TQ");
+    alert("Finished. Returning Home.")
+
   };
 
   return (
@@ -393,7 +360,7 @@ const Download = () => {
         <One userCallback={assignUser} />
         <Two user={user} userCallback={assignUser} />
         <Three user={user} userCallback={assignUser} />
-        <Four user={user} userCallback={assignUser} />
+        <Four user={user} completeCallback={handleComplete} />
       </StepWizard>
     </div>
   );
