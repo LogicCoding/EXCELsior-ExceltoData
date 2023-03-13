@@ -78,7 +78,7 @@ function makeErrorMessage( req, params ){
     let errMsg = null;
 
     for(const param of params){
-        if(!(Object.hasOwn(req.body, param))){
+        if(!(Object.hasOwn(req.query, param))){
 
             if(errMsg == null){
                 errMsg = "Request is missing params: ";
