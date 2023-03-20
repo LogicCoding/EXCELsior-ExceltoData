@@ -9,10 +9,11 @@ const cors = require('cors')
 const multer = require('multer');
 const SparqlClient = require('sparql-http-client/ParsingClient');
 
-const app = express();
+const app = express(extended=false);
 const port = 3010;
 
 // Middleware
+app.use(express.urlencoded({ extended: true }))
 app.use(express.json()) // JSON parser
 app.use(cors()) // Cross Origin Resource Sharing
 const upload = multer({storage: multer.memoryStorage()}); // file upload, only used on /update route
@@ -23,21 +24,16 @@ const upload = multer({storage: multer.memoryStorage()}); // file upload, only u
 with that endpoint. 
 */
 app.get('/classes', async (req, res, next) => {
-    //console.log(req.headers)
-    //console.log(req.body)
-    //console.log(req.params)
-    //console.log(req.query)
-    // let errMsg = makeErrorMessage(req, ['endpointUrl']);
-    // if(errMsg != null){
-    //     return next(new RequestError(errMsg));
-    // }
+    let errMsg = makeErrorMessage(req.query, ['endpointUrl']);
+    if(errMsg != null){
+        return next(new RequestError(errMsg));
+    }
 
     const endpointUrl =  req.query.endpointUrl;
-    //console.log(endpointUrl)
+``
     const client = new SparqlClient({ endpointUrl });
     try{
         const classes = await getClasses(client);
-        //console.log(classes)
         res.status(200).json(classes);
     }
     catch(error){
@@ -51,13 +47,13 @@ app.get('/classes', async (req, res, next) => {
 *endpoint.
 */ 
 app.get('/properties', async (req, res, next) => {
-    let errMsg = makeErrorMessage(req, ['endpointUrl', 'classURI']);
+    let errMsg = makeErrorMessage(req.query, ['endpointUrl', 'classURI']);
     if(errMsg != null){
         return next(new RequestError(errMsg));
     }
 
-    const endpointUrl =  req.body.endpointUrl;
-    const classURI = req.body.classURI;
+    const endpointUrl =  req.query.endpointUrl;
+    const classURI = req.query.classURI;
 
     const client = new SparqlClient({ endpointUrl });
     try{
@@ -77,14 +73,14 @@ app.get('/properties', async (req, res, next) => {
 *be downloaded.
 */  
 app.get('/csv', async (req, res, next) => {
-    let errMsg = makeErrorMessage(req, ['endpointUrl', 'classURI', 'properties']);
+    let errMsg = makeErrorMessage(req.query, ['endpointUrl', 'classURI', 'properties']);
     if(errMsg != null){
         return next(new RequestError(errMsg));
     }
 
-    const endpointUrl = req.body.endpointUrl;
-    const classURI = req.body.classURI;
-    const properties = req.body.properties;
+    const endpointUrl = req.query.endpointUrl;
+    const classURI = req.query.classURI;
+    const properties = req.query.properties;
 
     const client = new SparqlClient({ endpointUrl });
     try{
@@ -108,7 +104,7 @@ app.get('/csv', async (req, res, next) => {
 *Given the update url, update with the csv file given.
 */ 
 app.post('/update', upload.single("csv_file"), async (req, res, next) => {
-    let errMsg = makeErrorMessage(req, ["updateUrl"]);
+    let errMsg = makeErrorMessage(req.body, ["updateUrl"]);
     if(errMsg != null){
         return next(new RequestError(errMsg));
     }

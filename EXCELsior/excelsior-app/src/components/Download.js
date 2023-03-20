@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Stepper, Step } from "react-form-stepper";
 import { MdDescription } from "react-icons/md";
 import StepWizard from "react-step-wizard";
-import { Row, Col, Button, FormGroup, Label, Input } from "reactstrap";
+import { Row, Col, Button, FormGroup, Label, Input, Badge } from "reactstrap";
 import axios from "axios";
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const backend_url = 'http://127.0.0.1:3010'
 
@@ -24,16 +25,22 @@ const ActionButtons = (props) => {
     <div>
       <Row>
         {props.currentStep > 1 && (
-          <Col>
-            <Button className="ActionButtons" onClick={handleBack}>Back</Button>
+          <Col className="Universal">
+            <Button style={{marginTop:8, fontSize:20}} onClick={handleBack}>Back</Button>
           </Col>
         )}
-        <Col>
+      </Row>
+      <Row>
+        <Col className="Universal">
           {props.currentStep < props.totalSteps && (
-            <Button className="ActionButtons" onClick={handleNext}>Next</Button>
+            <Button style={{marginTop:8, fontSize:20}} onClick={handleNext}>Next</Button>
           )}
-          {props.currentStep === props.totalSteps && (
-            <Button className="ActionButtons" onClick={handleFinish}>Finish</Button>
+        </Col>
+      </Row>
+      <Row>
+        <Col className="Universal">
+        {props.currentStep === props.totalSteps && (
+            <Badge href="/" style={{marginTop:20, fontSize:20}} onClick={handleFinish}>Finish</Badge>
           )}
         </Col>
       </Row>
@@ -41,48 +48,8 @@ const ActionButtons = (props) => {
   );
 };
 
-const Base = (props) => {
-  const [info0, setInfo0] = useState({});
-  const [error, setError] = useState("");
-
-  const onBtnClick = (event) => {
-    const targetName = event.target.name;
-    const targetValue = event.target.value;
-
-    setInfo0((info0) => ({
-      ...info0,
-      [targetName]: targetValue
-    }));
-  };
-
-  const validate = () => {
-    if (!info0.path) setError("Upload or Download Required");
-    else {
-      setError("");
-      props.nextStep();
-      props.userCallback(info0)
-    }
-  };
-
-  return (
-    <div className="FormGroup">
-      <span style={{ color: "red" }}>{error}</span>
-      <h1>Welcome to ExcelSior</h1>
-      <h2>In order to begin, please choose to Download or Upload</h2>
-      <FormGroup>
-        <Label></Label>
-        <Button className="Buttons" name="path" value="Upload" onClick={onBtnClick}>Upload</Button>{' '}
-        <Button className="Buttons" name="path" value="Download" onClick={onBtnClick}>Download</Button>
-      </FormGroup>
-      <br />
-      <ActionButtons {...props} nextStep={validate}/>
-    </div>
-  );
-};
-
 const One = (props) => {
-  console.log("one");
-  console.log(props.user);
+  console.log("ONE: ", props.user);
   const [info1, setInfo1] = useState({});
   const [error, setError] = useState("");
 
@@ -96,20 +63,28 @@ const One = (props) => {
     }));
   };
 
-  const validate = () => {
+  const validate = async () => {
     if (!info1.url) setError("Database URL Required");
     else {
       setError("");
-      props.nextStep();
-      props.userCallback(info1);
+      await axios.get(backend_url + '/classes', {params: {'endpointUrl': info1.url}})
+      .then(res => {
+        const classesGet = res.data;
+        //console.log("found get");
+        //console.log(classesGet);
+        info1["classes"] = classesGet;
+        props.nextStep();
+        props.userCallback(info1);
+        console.log("PostUserCallBack1", info1);
+      })
     }
   };
 
   return (
-    <div className="FormGroup">
+    <div>
       <span style={{ color: "red" }}>{error}</span>
-      <h1>Welcome to ExcelSior: Download</h1>
-      <h2>In order to begin, please enter a valid Database URL.</h2>
+      <h1 className="Universal">Welcome to ExcelSior: Download</h1>
+      <h2 className="Universal">In order to begin, please enter a valid Database URL.</h2>
       <FormGroup>
         <Label></Label>
         <Input
@@ -127,18 +102,12 @@ const One = (props) => {
 };
 
 const Two = (props) => {
+  console.log("TWO:", props.user);
   const [info2, setInfo2] = useState({});
   const [error, setError] = useState("");
   //const json = JSON.stringify({endpointUrl: props.user.url})
   //console.log(json)
-  axios.get(backend_url + '/classes', {params: {'endpointUrl': props.user.url}})
-    .then(res => {
-      const classesGet = res.data;
-      //console.log("found get")
-      //console.log(classesGet)
-      this.setState({ classes: classesGet });
-    })
-  
+
   
   const onInputChanged = (event) => {
     const targetName = event.target.name;
@@ -151,50 +120,46 @@ const Two = (props) => {
   };
 
   const validate2 = () => {
-    if (info2.classchoice) setError("Class must be selected.");
+    if (info2.class) setError("Class must be selected.");
     else {
       setError("");
-      props.nextStep();
-      props.userCallback(info2);
+      console.log("Props.User at Validate2", props.user);
+      axios.get(backend_url + '/properties', {params: {'endpointUrl': props.user.url, 'classURI': props.user.class}})
+      .then(res => {
+        const attributesGet = res.data;
+        console.log("AttributesGet: ", attributesGet)
+        info2["attributes"] = attributesGet;
+        props.nextStep();
+        props.userCallback(info2);
+        console.log("PostUserCallBack2", info2);
+      })
     }
   };
+
+  const handleChange = (event) => {
+    props.user.class = event.target.value
+  }
 
   return (
     <div>
       <span style={{ color: "red" }}>{error}</span>
-      <h1>ExcelSior: {props.user.path}</h1>
-      <h2>Please select the corresponding class you would like to query.</h2>
+      <h1 className="Universal">ExcelSior: Download</h1>
+      <h2 className="Universal">Please select the corresponding class you would like to query.</h2>
+
       <FormGroup className="FormGroup">
         <Label className="Label">
           Provided Database: <b className="Label">{props.user.url || ""}</b>
         </Label>
       </FormGroup>
       <FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo2('Class 1')} /> {' '}
-                Class 1
-            </Label>
+        <Input type="select" name="class" onChange={handleChange}>
+          {props.user.classes? props.user.classes.map(option => (
+            <option key={option.URI} value={option.URI}>
+              {option.URI}
+            </option>
+          )): ""}
+        </Input>
         </FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo2('Class 2')} />{' '}
-                Class 2
-            </Label>
-        </FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo2('Class 3')} />{' '}
-                Class 3
-            </Label>
-        </FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo2('Class 4')} />{' '}
-                Class 4
-            </Label>
-        </FormGroup>
-      </FormGroup>
       <br />
       <ActionButtons {...props} nextStep={validate2} />
     </div>
@@ -202,15 +167,9 @@ const Two = (props) => {
 };
 
 const Three = (props) => {
+    console.log("THREE:", props.user)
     const [info3, setInfo3] = useState({});
     const [error, setError] = useState("");
-  
-
-    axios.get(backend_url + '/properties', {params: {'endpointUrl': props.user.url, 'classURI':props.user.class}})
-    .then(res => {
-      const attributesGet = res.data;
-      this.setState({ attributes: attributesGet });
-    })
 
 
     const onInputChanged = (event) => {
@@ -227,69 +186,63 @@ const Three = (props) => {
       if (info3.age) setError("Attribute must be selected.");
       else {
         setError("");
-        props.nextStep();
-        props.userCallback(info3);
+        console.log("Validate3", props.user.properties);
+        axios.get(backend_url + '/csv', {params: {'endpointUrl': props.user.url, 'classURI':props.user.class, 'properties': props.user.properties}})
+         .then(res => {
+           const itemsGet = res.data;
+           console.log("itemsGet", itemsGet);
+           info3['results'] = itemsGet;
+           props.nextStep();
+           props.userCallback(info3);
+           console.log("PostUserCallBack3", info3);
+        })
       }
     };
     
+    const handleChange = (event) => {
+      var options = event.target.options;
+      var value = []
+      for (var i = 0, l = options.length; i < l; i++) {
+        if (options[i].selected) {
+          value.push(options[i].value);
+        }
+      }
+      props.user.properties = value;
+    }
+
     return (
       <div>
         <span style={{ color: "red" }}>{error}</span>
-        <h1>ExcelSior: {props.user.path}</h1>
-        <h2>Please select the corresponding attribute you would like to query.</h2>
+        <h1 className="Universal">ExcelSior: Download</h1>
+        <h2 className="Universal">Please select the corresponding attribute you would like to query.</h2>
         <FormGroup>
-          <Label>
+          <Label className="Universal">
             Provided Database: <b>{props.user.url || ""}</b>
           </Label>
         </FormGroup>
         <FormGroup className="Radio">
-          <Label>
-            Selected Class: <b>Class 1</b>
+          <Label className="Universal">
+            Selected Class: <b>{props.user.class || ""}</b>
           </Label>
+          <Input multiple type="select" name="properties" onChange={handleChange}>
+            {props.user.attributes? props.user.attributes.map(option => (
+              <option key={option.URI} value={option.URI}>
+                {option.URI}
+              </option>
+            )): ""}
+          </Input> 
         </FormGroup>
         <FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo3('Attribute 1')} /> {' '}
-                Attribute 1
-            </Label>
-        </FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo3('Attribute 2')} />{' '}
-                Attribute 2
-            </Label>
-        </FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo3('Attribute 3')} />{' '}
-                Attribute 3
-            </Label>
-        </FormGroup>
-        <FormGroup check className="Radio">
-            <Label check>
-                <Input type="radio" name="radio1" onClick={() => setInfo3('Attribute 4')} />{' '}
-                Attribute 4
-            </Label>
-        </FormGroup>
       </FormGroup>
         <br />
         <ActionButtons {...props} nextStep={validate3} />
       </div>
     );
   };
-
+/*
 const Five = (props) => {
   const [info3, setInfo3] = useState({});
   const [error, setError] = useState("");
-
-
-
-  axios.get(backend_url + '/csv', {params: {'endpointUrl': props.user.url, 'classURI':props.user.class, 'properties': props.user.attributes}})
-    // .then(res => {
-    //   const attributesGet = res.data;
-    //   this.setState({ attributes: attributesGet });
-    // })
 
   const onInputChanged = (event) => {
     const targetName = event.target.name;
@@ -329,26 +282,36 @@ const Five = (props) => {
       <ActionButtons {...props} nextStep={validate3} />
     </div>
   );
-};
+};*/
 
 const Four = (props) => {
-    console.log("step4 receive user object");
-    console.log(props.user);
+    console.log("FOUR: ", props.user);
   
     const handleLastStep = () => {
       props.lastStep();
       props.completeCallback();
     };
   
+    const downloadResults = () => {
+      const blob = new Blob([props.user.results], {type: 'text/csv'})
+      const element = document.createElement("a");
+      element.href = URL.createObjectURL(blob);
+      element.download = "ExcelSiorDownload.csv";
+      document.body.appendChild(element);
+      element.click();
+    }
+
     return (
       <div>
-        <h2>Summary</h2>
-        <p>Action: {props.user.path}</p>
-        <p>Provided Database: <b>{props.user.url}</b></p>
-        <p>Class: <b>Class 1</b></p>
-        <p>Attribute: <b>Attribute 3</b></p>
-        <br />
+        <h2 className="Universal">Summary</h2>
+        <p className="Universal">ExcelSior: Download</p>
+        <p className="Universal">Provided Database: <b>{props.user.url}</b></p>
+        <p className="Universal">Class: <b>{props.user.class || ""}</b></p>
+        <p className="Universal">Attributes: {props.user.properties || ""}</p>
+        <p className="Universal"><Button onClick={downloadResults}>Download Results</Button></p>
         <ActionButtons {...props} lastStep={handleLastStep} />
+        <p>Results: </p><p>{props.user.results || ""}</p>
+        <br />
       </div>
     );
   };
@@ -380,7 +343,8 @@ const Download = () => {
   };
 
   const handleComplete = () => {
-    alert("You r done. TQ");
+    alert("Finished. Returning Home.")
+
   };
 
   return (

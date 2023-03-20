@@ -2,6 +2,14 @@
     font-family: sans-serif;
     text-align: center;
   }
+
+.Universal {
+    justify-content: center; 
+    text-align: center;
+    display: flex; 
+    margin-bottom: 10; 
+    font-size: 30;
+}
   
 .FormGroup {
     margin: 0;
@@ -39,6 +47,8 @@
     border-radius: 0.5rem;
     padding: 0.375rem 0.75rem;
     margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
 }
 
 .Radio {
