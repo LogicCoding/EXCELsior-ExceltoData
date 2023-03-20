@@ -27,3 +27,16 @@ import an Excel spreadsheet as a database to simplify queries on its data, and b
 Excel spreadsheet from a database such that it can be edited by a user and then read back in to
 update the database. The specified mapping uses the dataset schema used by the database to
 enable the user to be specific about the mapping.
+
+## Deployment/Build Instructions:
+1. git clone https://github.com/LogicCoding/EXCELsior-ExceltoData.git
+2. In another directory outside of EXCELsior, git clone https://github.com/melaasar/firesat.git
+3. cd firesat
+4. ./gradlew startFuseki
+5. ./gradlew query
+6. In another terminal window, cd to EXCELsior-ExceltoData/EXCELsior/backend/
+7. If node is not installed, install node at https://nodejs.dev/en/download/
+8. Run the command node EXCELsior.js
+9. In another terminal window, cd to EXCELsior-ExceltoData/EXCELsior/excelsior-app/
+10. npm i reactstrap react-step-wizard react-router-dom axios react-form-stepper react-icons
+11. npm start
