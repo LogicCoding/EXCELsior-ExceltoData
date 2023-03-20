@@ -18,6 +18,10 @@ app.use(cors()) // Cross Origin Resource Sharing
 const upload = multer({storage: multer.memoryStorage()}); // file upload, only used on /update route
 
 // Routes
+
+/** Given the endpoint url, get all classes associated 
+with that endpoint. 
+*/
 app.get('/classes', async (req, res, next) => {
     //console.log(req.headers)
     //console.log(req.body)
@@ -41,6 +45,11 @@ app.get('/classes', async (req, res, next) => {
     }
 });
 
+/** 
+*Given the endpoint url, and a class, get all
+*properties associated with that class at that 
+*endpoint.
+*/ 
 app.get('/properties', async (req, res, next) => {
     let errMsg = makeErrorMessage(req, ['endpointUrl', 'classURI']);
     if(errMsg != null){
@@ -60,6 +69,13 @@ app.get('/properties', async (req, res, next) => {
     }
 });
 
+
+/** 
+*Given the endpoint URL of a fuseki server, the class uri
+*and a selection of properties, get send a csv file 
+*converted from that information as an attachment that can
+*be downloaded.
+*/  
 app.get('/csv', async (req, res, next) => {
     let errMsg = makeErrorMessage(req, ['endpointUrl', 'classURI', 'properties']);
     if(errMsg != null){
@@ -87,6 +103,10 @@ app.get('/csv', async (req, res, next) => {
 
 //CSV is currently parsed on the frontend. 
 //This allows us to let the user know if there are any issues before they send to DB 
+
+/** 
+*Given the update url, update with the csv file given.
+*/ 
 app.post('/update', upload.single("csv_file"), async (req, res, next) => {
     let errMsg = makeErrorMessage(req, ["updateUrl"]);
     if(errMsg != null){
