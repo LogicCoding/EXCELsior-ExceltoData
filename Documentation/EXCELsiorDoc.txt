@@ -1,0 +1,23 @@
+EXCELsior API Endpoints
+
+Endpoint: /classes
+Request Method: GET
+Given the endpoint url, get all classes associated 
+with that endpoint. 
+
+Endpoint: /properties
+Request Method: GET
+Given the endpoint url, and a class, get all
+properties associated with that class at that 
+endpoint.
+
+Endpoint: /csv
+Request Method: GET
+Given the endpoint URL of a fuseki server, the class uri
+and a selection of properties, get send a csv file 
+converted from that information as an attachment that can
+be downloaded.
+
+Endpoint: /update
+Request Method: POST
+Given the update url, update with the csv file given.
